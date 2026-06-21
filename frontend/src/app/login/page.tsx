@@ -18,8 +18,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Direct absolute URL fallback ensures it doesn't default to a broken domain path
-      const baseApi = process.env.NEXT_PUBLIC_API_URL || 'https://trao-ai-travel-planner-5fn9.onrender.com/api';
+      const baseApi = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
       const response = await fetch(`${baseApi}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,46 +41,55 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Trao AI Travel Planner Portal</p>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '40px 24px', backgroundColor: '#0b0f19' }}>
+      <div style={{ backgroundColor: '#111827', border: '1px solid #1f2937', borderRadius: '16px', width: '100%', maxWidth: '450px', padding: '40px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
         
-        {error && <div className="auth-error">{error}</div>}
+        <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.025em', marginBottom: '8px', textAlign: 'center' }}>Welcome Back</h2>
+        <p style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '32px', textAlign: 'center' }}>Trao AI Travel Planner Portal</p>
+        
+        {error && (
+          <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', fontSize: '13px', fontWeight: 500, padding: '10px 14px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Email Address</label>
             <input 
               type="email" 
               required 
               value={email} 
               onChange={e => setEmail(e.target.value)} 
-              className="form-input" 
+              style={{ width: '100%', backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '10px', padding: '12px 16px', color: '#ffffff', fontSize: '14px', outline: 'none' }} 
               placeholder="name@example.com"
             />
           </div>
           
-          <div className="form-group">
-            <label className="form-label">Password</label>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Password</label>
             <input 
               type="password" 
               required 
               value={password} 
               onChange={e => setPassword(e.target.value)} 
-              className="form-input" 
+              style={{ width: '100%', backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '10px', padding: '12px 16px', color: '#ffffff', fontSize: '14px', outline: 'none' }} 
               placeholder="••••••••"
             />
           </div>
           
-          <button type="submit" disabled={loading} className="btn-auth">
+          <button 
+            type="submit" 
+            disabled={loading} 
+            style={{ width: '100%', padding: '12px 24px', background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', marginTop: '12px', marginBottom: '16px' }}
+          >
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
         
-        <p className="auth-switch-text">
+        <p style={{ textAlign: 'center', fontSize: '13px', color: '#9ca3af' }}>
           New explorer? 
-          <Link href="/register" className="auth-link">Create Account</Link>
+          <Link href="/register" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 600, marginLeft: '4px' }}>Create Account</Link>
         </p>
       </div>
     </div>

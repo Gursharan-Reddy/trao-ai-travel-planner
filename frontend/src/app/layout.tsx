@@ -1,7 +1,7 @@
 import React from 'react';
+import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 // @ts-ignore
-import './globals.css';
 
 export const metadata = {
   title: 'Trao AI Travel Planner',
