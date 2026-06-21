@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('🔥 Server execution block intercept:', err.message);
+  console.error('Server execution block intercept:', err.message);
   res.status(500).json({ 
     message: 'An internal server anomaly occurred inside the application shell.' 
   });
@@ -54,7 +54,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`===========================================================`);
-  console.log(`🚀 Security Data Vault Running on Port ${PORT}`);
-  console.log(`🔒 Supabase PostgreSQL Instance Authenticated and Connected`);
+  console.log(`Security Data Vault Running on Port ${PORT}`);
+  console.log(`Supabase PostgreSQL Instance Authenticated and Connected`);
   console.log(`===========================================================`);
 });
