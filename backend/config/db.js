@@ -1,7 +1,10 @@
-const { Pool } = require('pg');
-const dotenv = require('dotenv');
+import pg from 'pg';
+import dotenv from 'dotenv';
 
+// Initialize configuration environment parameters
 dotenv.config();
+
+const { Pool } = pg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -19,6 +22,7 @@ pool.query('SELECT NOW()', (err, res) => {
   }
 });
 
-module.exports = {
+// Explicit named export wrapper matching your routes' `import { db }` statements
+export const db = {
   query: (text, params) => pool.query(text, params),
 };

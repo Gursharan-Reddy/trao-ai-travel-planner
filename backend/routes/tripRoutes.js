@@ -1,151 +1,72 @@
-const express = require('express');
-const router = express.Router();
-const pool = require('../config/db');
-const authMiddleware = require('../middleware/auth');
-const { GoogleGenAI, Type } = require('@google/genai');
+import express from 'express';
+import { db } from '../config/db.js';
+import { GoogleGenAI } from '@google/genai'; // Utilizing live 2026 version @google/genai syntax bindings 
 
+const router = express.Router();
+
+// Initialize the live Google Gemini developer dashboard orchestration layer instance 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-router.use(authMiddleware);
+// Middleware function verifying security auth context headers explicitly
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-/**
- * @route   GET /api/trips
- * @desc    
- */
-router.get('/', async (req, res) => {
+  if (!token) return res.status(401).json({ message: 'Access authorization vector missing.' });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: 'Token token verification authorization expired or invalid.' });
+    req.user = user;
+    next();
+  });
+};
+
+// ==========================================================================
+// Fetch Saved User Travel Plans Itineraries (/api/trips)
+// ==========================================================================
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const result = await pool.query(
-      'SELECT * FROM trips WHERE user_id = $1 ORDER BY created_at DESC',
-      [userId]
-    );
-    res.json(result.rows);
+    const trips = await db.query('SELECT * FROM trips WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+    res.status(200).json(trips.rows);
   } catch (err) {
-    console.error('Fetch error:', err.message);
-    res.status(500).json({ message: 'Server database read exception.' });
+    console.error('🔥 Retrieval pipeline error intercepted:', err.message);
+    res.status(500).json({ message: 'Failed to extract itinerary entries history logs.' });
   }
 });
 
-/**
- * @route   POST /api/trips/generate
- * @desc    
- */
-router.post('/generate', async (req, res) => {
-  const { destination, durationDays, budgetTier, interests } = req.body;
-  const userId = req.user.id;
+// ==========================================================================
+// Generate and Save New Travel Itinerary AI Stream (/api/trips/generate)
+// ==========================================================================
+router.post('/generate', authenticateToken, async (req, res) => {
+  const { destination, days, budget, interests } = req.body;
 
   try {
-    const prompt = `Create a highly tailored travel plan itinerary for a trip to ${destination}.
-    Duration: ${durationDays} days.
-    Budget Profile Tier: ${budgetTier}.
-    Core Focus Interests: ${interests.join(', ')}.
-    Provide exactly ${durationDays} days in the schedule plan section, mapping realistic activities matching their interests.
-    Provide a list of 2-3 curated hotel accommodations that match the ${budgetTier} tier.
-    Provide a realistic breakdown estimating total costs and a custom packing checklist.`;
+    // 1. Invoke the structural prompt formatting constraints schema mapping rules
+    const prompt = `Generate a comprehensive travel itinerary dataset for a trip to ${destination} lasting ${days} days with a total spending tier budget profile of ${budget}. The user profile is strictly interested in: ${interests.join(', ')}. Return the raw response exclusively as clean, valid JSON matching this layout structure: { "destination": "${destination}", "duration": "${days} Days", "itinerary": [ { "day": 1, "title": "Day Title Description", "activities": ["Activity Detail 1", "Activity Detail 2"] } ], "hotels": [ { "name": "Recommended Hotel Name", "estimatedCost": "$XYZ per night" } ] }`;
 
+    // 2. Fetch the target engine completion layers using model frameworks
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            itinerary: {
-              type: Type.ARRAY,
-              description: "Day by day schedule plan breakdown.",
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  dayNumber: { type: Type.INTEGER },
-                  activities: {
-                    type: Type.ARRAY,
-                    items: { type: Type.STRING }
-                  }
-                },
-                required: ["dayNumber", "activities"]
-              }
-            },
-            hotels: {
-              type: Type.ARRAY,
-              description: "Curated hotel accommodation suggestions.",
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  budget: { type: Type.STRING, description: "Budget description context relative to target constraints." }
-                },
-                required: ["name", "budget"]
-              }
-            },
-            estimatedBudget: {
-              type: Type.OBJECT,
-              description: "Cost estimation details.",
-              properties: {
-                estimatedTotal: { type: Type.STRING, description: "Total approximate cost breakdown text (e.g. $1200 or ₹90,000)" }
-              },
-              required: ["estimatedTotal"]
-            },
-            packingList: {
-              type: Type.ARRAY,
-              description: "List of recommended items to pack.",
-              items: { type: Type.STRING }
-            }
-          },
-          required: ["itinerary", "hotels", "estimatedBudget", "packingList"]
-        }
+        responseMimeType: 'application/json'
       }
     });
 
-    const parsedData = JSON.parse(response.text);
+    const cleanGeneratedTextData = JSON.parse(response.text);
 
-    const result = await pool.query(
-      `INSERT INTO trips 
-       (user_id, destination, duration_days, budget_tier, interests, itinerary, hotels, estimated_budget, packing_list) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-       RETURNING *`,
-      [
-        userId, 
-        destination, 
-        durationDays, 
-        budgetTier, 
-        interests, 
-        JSON.stringify(parsedData.itinerary), 
-        JSON.stringify(parsedData.hotels),
-        JSON.stringify(parsedData.estimatedBudget),
-        JSON.stringify(parsedData.packingList)
-      ]
+    // 3. Commit this verified payload object straight into your Supabase database instance tables rows
+    const newTripRecord = await db.query(
+      'INSERT INTO trips (user_id, destination, duration, budget, interests, data) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [req.user.id, destination, `${days} Days`, budget, JSON.stringify(interests), JSON.stringify(cleanGeneratedTextData)]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(newTripRecord.rows[0]);
   } catch (err) {
-    console.error('Gemini Live Compilation Failure:', err);
-    res.status(500).json({ message: 'AI generative execution exception encountered.' });
+    console.error('🔥 Generative itinerary execution flow failure:', err.message);
+    res.status(500).json({ message: 'Failed to process AI travel planner parameter data engines.' });
   }
 });
 
-/**
- * @route   DELETE /api/trips/:id
- */
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
-  const userId = req.user.id;
-
-  try {
-    const result = await pool.query(
-      'DELETE FROM trips WHERE id = $1 AND user_id = $2 RETURNING *',
-      [id, userId]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Trip variant not found or user unauthorized.' });
-    }
-
-    res.json({ message: 'Venture record successfully purged from database vault.' });
-  } catch (err) {
-    console.error('Deletion error:', err.message);
-    res.status(500).json({ message: 'Server database drop exception encountered.' });
-  }
-});
-
-module.exports = router;
+// CRITICAL EXPORT LINE: Standard ES Module default export block layout
+export default router;
