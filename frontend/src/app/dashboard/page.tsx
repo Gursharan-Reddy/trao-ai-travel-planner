@@ -32,10 +32,14 @@ export default function Dashboard() {
     try {
       await fetchWithAuth('/trips/generate', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           destination,
-          durationDays: Number(duration),
-          budgetTier: budget,
+          days: Number(duration),
+          budget: budget,
+          budget_tier: budget,
           interests: interests.split(',').map(i => i.trim()),
         }),
       });
