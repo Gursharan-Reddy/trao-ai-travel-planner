@@ -18,8 +18,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      // Direct absolute URL fallback ensures it doesn't default to a broken domain path
+      const baseApi = process.env.NEXT_PUBLIC_API_URL || 'https://trao-ai-travel-planner-5fn9.onrender.com/api';
+      const response = await fetch(`${baseApi}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

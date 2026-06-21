@@ -19,8 +19,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const response = await fetch(`${apiUrl}/auth/register`, {
+      const baseApi = process.env.NEXT_PUBLIC_API_URL || 'https://trao-ai-travel-planner-5fn9.onrender.com/api';
+      const response = await fetch(`${baseApi}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
