@@ -1,6 +1,7 @@
 import express from 'express';
 import { db } from '../config/db.js';
 import { GoogleGenAI } from '@google/genai'; 
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
