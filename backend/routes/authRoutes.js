@@ -7,7 +7,6 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
-  setError('');
 
   try {
     const userExistCheck = await db.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -34,7 +33,7 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('🔥 Registration transaction fault sequence intercepted:', err.message);
+    console.error('Registration transaction fault sequence intercepted:', err.message);
     res.status(500).json({ message: 'Database writing failure during account validation.' });
   }
 });
@@ -66,7 +65,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('🔥 Login authentication pipeline failure intercepted:', err.message);
+    console.error('Login authentication pipeline failure intercepted:', err.message);
     res.status(500).json({ message: 'Server side authentication transmission protocol failure.' });
   }
 });
