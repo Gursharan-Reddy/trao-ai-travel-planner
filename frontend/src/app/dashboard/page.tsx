@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [budget, setBudget] = useState('Mid-Range Balanced');
   const [interests, setInterests] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [expandedTripId, setExpandedTripId] = useState(null);
 
   useEffect(() => {
     loadUserTrips();
@@ -135,6 +136,8 @@ export default function Dashboard() {
             </div>
           ) : (
             trips.map((trip: any) => {
+              const isExpanded = expandedTripId === trip.id;
+
               const parseJsonData = (field: any) => {
                 try {
                   return typeof field === 'string' ? JSON.parse(field) : field;
@@ -147,82 +150,113 @@ export default function Dashboard() {
               const parsedHotels = parseJsonData(trip.hotels);
 
               return (
-                <div key={trip.id} className="trip-card" style={{ marginTop: '0px' }}>
-                  <div className="trip-header">
+                <div key={trip.id} className="trip-card" style={{ marginTop: '0px', marginBottom: '16px' }}>
+                  <div 
+                    onClick={() => setExpandedTripId(isExpanded ? null : trip.id)}
+                    className="trip-header" 
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                  >
                     <div>
                       <h4 className="trip-destination">{trip.destination}</h4>
                       <p className="trip-meta">{trip.duration_days} Days — {trip.budget_tier}</p>
                     </div>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <button onClick={() => handleDeleteTrip(trip.id)} className="btn-delete">Cancel Trip</button>
-                      <span className="status-badge">Active Stream</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTrip(trip.id);
+                          }} 
+                          className="btn-delete"
+                        >
+                          Cancel Trip
+                        </button>
+                        <span className="status-badge">Active Stream</span>
+                      </div>
+                      
+                      <svg 
+                        className={`accordion-arrow ${isExpanded ? 'rotate' : ''}`}
+                        style={{ 
+                          width: '20px', 
+                          height: '20px', 
+                          fill: 'none', 
+                          stroke: 'currentColor', 
+                          strokeWidth: '2',
+                          transition: 'transform 0.2s',
+                          transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+                        }}
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
                     </div>
                   </div>
                   
-                  {/* Target Focus Tags */}
-                  <div style={{ marginTop: '16px' }}>
-                    <p className="form-label" style={{ marginBottom: '8px' }}>Target Focus Elements</p>
-                    <div className="interests-container">
-                      {Array.isArray(trip.interests) ? (
-                        trip.interests.map((interest: string, i: number) => (
-                          <span key={i} className="interest-tag">{interest}</span>
-                        ))
-                      ) : (
-                        <span className="interest-tag">{trip.interests}</span>
-                      )}
-                    </div>
-                  </div>
+                  {isExpanded && (
+                    <div className="trip-content-expansion" style={{ marginTop: '16px', borderTop: '1px solid #334155', paddingTop: '16px' }}>
+                      <div>
+                        <p className="form-label" style={{ marginBottom: '8px' }}>Target Focus Elements</p>
+                        <div className="interests-container">
+                          {Array.isArray(trip.interests) ? (
+                            trip.interests.map((interest: string, i: number) => (
+                              <span key={i} className="interest-tag">{interest}</span>
+                            ))
+                          ) : (
+                            <span className="interest-tag">{trip.interests}</span>
+                          )}
+                        </div>
+                      </div>
 
-                  {/* Expanded AI Itinerary Planning Blocks */}
-                  {parsedItinerary && (
-                    <div className="details-section">
-                      <p className="details-subtitle">Generated Schedule Plan</p>
-                      <div className="itinerary-box">
-                        {Array.isArray(parsedItinerary) && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            {parsedItinerary.map((day: any, i: number) => (
-                              <div key={i} className="day-block">
-                                <h5 className="day-title">Day {day.dayNumber || day.day || i + 1}</h5>
-                                <div style={{ marginTop: '6px' }}>
-                                  {Array.isArray(day.activities) ? (
-                                    day.activities.map((activity: any, actIdx: number) => (
-                                      <div key={actIdx} className="activity-item">
-                                        <span className="activity-bullet">✦</span>
-                                        <span>
-                                          {typeof activity === 'object' && activity !== null
-                                            ? `${activity.time ? `[${activity.time}] ` : ''}${activity.name || activity.activity || activity.title}`
-                                            : activity}
-                                        </span>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <div className="activity-item">
-                                      <span className="activity-bullet">✦</span>
-                                      <span>{day.activities || 'No scheduled items flagged.'}</span>
+                      {parsedItinerary && (
+                        <div className="details-section">
+                          <p className="details-subtitle">Generated Schedule Plan</p>
+                          <div className="itinerary-box">
+                            {Array.isArray(parsedItinerary) && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                {parsedItinerary.map((day: any, i: number) => (
+                                  <div key={i} className="day-block">
+                                    <h5 className="day-title">Day {day.dayNumber || day.day || i + 1}</h5>
+                                    <div style={{ marginTop: '6px' }}>
+                                      {Array.isArray(day.activities) ? (
+                                        day.activities.map((activity: any, actIdx: number) => (
+                                          <div key={actIdx} className="activity-item">
+                                            <span className="activity-bullet">✦</span>
+                                            <span>
+                                              {typeof activity === 'object' && activity !== null
+                                                ? `${activity.time ? `[${activity.time}] ` : ''}${activity.name || activity.activity || activity.title}`
+                                                : activity}
+                                            </span>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <div className="activity-item">
+                                          <span className="activity-bullet">✦</span>
+                                          <span>{day.activities || 'No scheduled items flagged.'}</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(parsedHotels) && parsedHotels.length > 0 && (
+                        <div className="details-section">
+                          <p className="details-subtitle">Curated Accommodations</p>
+                          <div className="hotel-list">
+                            {parsedHotels.map((hotel: any, idx: number) => (
+                              <div key={idx} className="hotel-item">
+                                <span className="hotel-name">{hotel.name}</span>
+                                <span className="hotel-cost">✨ {hotel.budget || 'Premium Tier'}</span>
                               </div>
                             ))}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Curated Accommodations Grid Section */}
-                  {Array.isArray(parsedHotels) && parsedHotels.length > 0 && (
-                    <div className="details-section">
-                      <p className="details-subtitle">Curated Accommodations</p>
-                      <div className="hotel-list">
-                        {parsedHotels.map((hotel: any, idx: number) => (
-                          <div key={idx} className="hotel-item">
-                            <span className="hotel-name">{hotel.name}</span>
-                            <span className="hotel-cost">✨ {hotel.budget || 'Premium Tier'}</span>
-                          </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
