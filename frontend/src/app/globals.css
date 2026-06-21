@@ -12,6 +12,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
+
 .header-bar {
   display: flex;
   align-items: center;
@@ -48,13 +49,6 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 40px 24px;
-}
-
-@media (min-width: 1024px) {
-  .dashboard-container {
-    grid-template-columns: 380px 1fr;
-    align-items: start;
-  }
 }
 
 .panel-card {
@@ -295,12 +289,6 @@ body {
   gap: 12px;
 }
 
-@media (min-width: 640px) {
-  .hotel-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 .hotel-item {
   background-color: #1f2937;
   border: 1px solid #374151;
@@ -329,6 +317,12 @@ body {
   border-radius: 16px;
   color: #4b5563;
   font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  .hotel-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 1024px) {
