@@ -1,7 +1,6 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 
-// Initialize configuration environment parameters
 dotenv.config();
 
 const { Pool } = pg;
@@ -13,7 +12,6 @@ const pool = new Pool({
   }
 });
 
-// Force an immediate test connection query on startup
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
     console.error('Supabase Connection Error:', err.message);
@@ -22,7 +20,6 @@ pool.query('SELECT NOW()', (err, res) => {
   }
 });
 
-// Explicit named export wrapper matching your routes' `import { db }` statements
 export const db = {
   query: (text, params) => pool.query(text, params),
 };
